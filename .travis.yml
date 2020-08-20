@@ -1,0 +1,25 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t mpusinhol/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true mpusinhol/react-test npm test
+
+after_success:
+  - docker build -t mpusinhol/multi-client ./client
+  - docker build -t mpusinhol/multi-nginx ./nginx
+  - docker build -t mpusinhol/multi-server ./server
+  - docker build -t mpusinhol/multi-worker ./worker
+  
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Push images to Docker hub
+  - docker push mpusinhol/multi-client
+  - docker push mpusinhol/multi-nginx
+  - docker push mpusinhol/multi-server
+  - docker push mpusinhol/multi-worker
